@@ -41,10 +41,11 @@ typedef unsigned int tjs_uint;    /* at least 32bits */
 
 #ifdef __cplusplus
 //typedef char16_t tjs_char;
+//typedef std::u16string tjs_string;
 typedef wchar_t tjs_char;
 typedef std::wstring tjs_string;
 #else
-typedef unsigned short tjs_char;
+typedef tjs_uint16 tjs_char;
 #endif
 
 typedef char tjs_nchar;
@@ -71,6 +72,7 @@ typedef double tjs_real;
 typedef intptr_t tjs_intptr_t;
 typedef uintptr_t tjs_uintptr_t;
 
+//#define TJS_W(X) u##X
 #define TJS_W(X) L##X
 
 
@@ -114,7 +116,7 @@ typedef uintptr_t tjs_uintptr_t;
 typedef char16_t tjs_char;
 typedef std::u16string tjs_string;
 #else
-typedef unsigned short tjs_char;
+typedef tjs_uint16 tjs_char;
 #endif
 
 typedef char tjs_nchar;
@@ -5040,45 +5042,40 @@ inline bool TVPIsAnyMouseButtonPressedInShiftStateFlags(tjs_uint32 state)
 // JoyPad virtual key codes
 //---------------------------------------------------------------------------
 // These VKs are KIRIKIRI specific. Not widely used.
-#define VK_PAD_FIRST	0x1B0   // first PAD related key code
+#define VK_PAD_FIRST	0x1B0 // first PAD related key code
 #define VK_PADLEFT		0x1B5
 #define VK_PADUP		0x1B6
 #define VK_PADRIGHT		0x1B7
 #define VK_PADDOWN		0x1B8
-#define VK_PAD1			0x1C0
-#define VK_PAD2			0x1C1
-#define VK_PAD3			0x1C2
-#define VK_PAD4			0x1C3
-#define VK_PAD5			0x1C4
-#define VK_PAD6			0x1C5
-#define VK_PAD7			0x1C6
-#define VK_PAD8			0x1C7
-#define VK_PAD9			0x1C8
-#define VK_PAD10		0x1C9
+#define	VK_PADCENTER    0x1B9
+//0
+#define VK_PAD1			0x1C0 // A
+#define VK_PAD2			0x1C1 // B
+#define VK_PAD3			0x1C2 // X
+#define VK_PAD4			0x1C3 // Y
+#define VK_PAD5			0x1C4 // L
+#define VK_PAD6			0x1C5 // R
+#define VK_PAD7			0x1C6 // L2
+#define VK_PAD8			0x1C7 // R2
+// 8
+#define VK_PAD9			0x1C8 // SELECT
+#define VK_PAD10		0x1C9 // START
+#define VK_PAD11		0x1CA // L3
+#define VK_PAD12		0x1CB // R3
+#define VK_PAD_L_LEFT	0x1CC // analog left pad emulation
+#define VK_PAD_L_UP		0x1CD 
+#define VK_PAD_L_RIGHT	0x1CE
+#define VK_PAD_L_DOWN	0x1CF
+// 16
+#define VK_PAD_R_LEFT	0x1D0 // analog right pad emulation
+#define VK_PAD_R_UP		0x1D1
+#define VK_PAD_R_RIGHT	0x1D2
+#define VK_PAD_R_DOWN	0x1D3
+// 20
 #define VK_PADANY		0x1DF   // returns whether any one of pad buttons are pressed,
 							    // in System.getKeyState
 #define VK_PAD_LAST		0x1DF   // last PAD related key code
-enum {
-	VK_PADCENTER    = 0x1B9,
-	VK_PAD_A        = 0x1D0,
-	VK_PAD_B        = 0x1D1,
-	VK_PAD_C        = 0x1D2,
-	VK_PAD_X        = 0x1D3,
-	VK_PAD_Y        = 0x1D4,
-	VK_PAD_Z        = 0x1D5,
-	VK_PAD_L1       = 0x1D6,
-	VK_PAD_R1       = 0x1D7,
-	VK_PAD_L2       = 0x1D8,
-	VK_PAD_R2       = 0x1D9,
-	VK_PAD_THUMBL   = 0x1DA,
-	VK_PAD_THUMBR   = 0x1DB,
-	VK_PAD_START    = 0x1DC,
-	VK_PAD_SELECT   = 0x1DD,
-	VK_PAD_MODE     = 0x1DE,
-	VK_MEDIA_REWIND = 0x1F0,
-	VK_MEDIA_FAST_FORWARD = 0x1F1,
-	VK_BACK_SCREEN  = 0x200,
-};
+
 //---------------------------------------------------------------------------
 
 
@@ -6171,6 +6168,33 @@ public:
 	//! @param		delayed		1フレーム遅延が発生したかどうかを返す( !0 : 発生、0: 発生せず )
 	//! @return		Wait可不可 true : 可能、false : 不可
 	virtual bool TJS_INTF_METHOD WaitForVBlank( tjs_int* in_vblank, tjs_int* delayed ) = 0;
+
+#ifdef __GENERIC__
+	//---------------------------------------------------------------------------
+	// Generic版用拡張メソッド
+	//---------------------------------------------------------------------------
+
+	//! @brief		(Window->DrawDevice) ビデオの更新
+	//! @param		w			ビデオの幅
+	//! @param		h			ビデオの高さ
+	//! @param		updator		ビデオの更新を行う関
+	virtual void UpdateVideo(int w, int h, std::function<void(char *dest, int pitch)> updator) = 0;
+
+	//! @brief		(Window->DrawDevice) ビデオのクリア
+	//! @note		ビデオの内容をクリアする。通常は黒でクリアされる。
+	//!				このメソッドはビデオ再生完了後に呼び出すことが想定される
+	//!				(ビデオの内容をクリアするため)。このメソッドを呼び出すと、
+	//!				ビデオの内容がクリアされ、次に UpdateVideo()
+	//!				が呼ばれるまでビデオの内容は更新されない。
+	virtual void ClearVideo() = 0;
+
+	//! @brief		(Window->DrawDevice) VSync待ちを有効にするかどうかを設定する
+	//! @param		enable		有効にするかどうか
+	//! @note		このメソッドは、VSync待ちを有効にするかどうかを設定する。
+	//!				有効にすると、描画デバイスは低層側の機能で VSYnc を待つ
+	virtual void SetWaitVSync(bool enable) = 0;
+#endif
+
 };
 //---------------------------------------------------------------------------
 
