@@ -23,11 +23,14 @@
 #define STDCALL __stdcall
 #else
 #define STDCALL
+typedef void* HWND;
+class IStream;
 #endif
 
 #include <string>
 #include <stdarg.h>
 #include <stdint.h>
+#include <climits>
 
 namespace krkrz_plugin {
 
@@ -4953,7 +4956,6 @@ enum tTVPGraphicLoadMode
 
 typedef bool (*tTVPGraphicAcceptSaveHandler)(void* formatdata, const ttstr & type, class iTJSDispatch2** dic );
 
-#ifdef _WIN32
 /* For grahpic load and save */
 typedef void (*tTVPGraphicLoadingHandlerForPlugin)(void* formatdata,
 	void *callbackdata,
@@ -4968,7 +4970,6 @@ typedef void (*tTVPGraphicSaveHandlerForPlugin)(void* formatdata, void* callback
 	tjs_uint width, tjs_uint height,
 	tTVPGraphicSaveScanLineCallback scanlinecallback,
 	class iTJSDispatch2* meta );
-#endif
 
 //---------------------------------------------------------------------------
 // font ralated constants

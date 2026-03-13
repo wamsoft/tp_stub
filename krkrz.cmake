@@ -30,6 +30,8 @@ function(krkrz_plugin PROJECT_NAME)
         set(TVP_LIBRARY_TYPE SHARED)
     endif()
 
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
     add_compile_options("$<$<AND:$<C_COMPILER_ID:MSVC>,$<COMPILE_LANGUAGE:C>>:/utf-8>")
     add_compile_options("$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<COMPILE_LANGUAGE:CXX>>:/utf-8>")
     add_compile_options("$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<COMPILE_LANGUAGE:CXX>>:/Zc:__cplusplus>")
@@ -40,6 +42,16 @@ function(krkrz_plugin PROJECT_NAME)
         target_compile_definitions(${PROJECT_NAME} PRIVATE
             TVP_STATIC_PLUGIN
             TVP_PLUGIN_NAME=${PROJECT_NAME}
+        )
+    endif()
+
+   if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT KRKRZ_STATIC)
+
+        string(TOLOWER "${PROJECT_NAME}" PROJECT_NAME_LOWER)
+        
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+            OUTPUT_NAME "${PROJECT_NAME_LOWER}"
+            PREFIX "lib"
         )
     endif()
 
