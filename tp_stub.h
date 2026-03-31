@@ -40,6 +40,7 @@ struct IDirect3D9;
 #include <string>
 #include <stdarg.h>
 #include <stdint.h>
+#include <climits>
 
 namespace krkrz_plugin {
 
@@ -90,6 +91,9 @@ typedef struct tagBITMAPINFO {
     RGBQUAD             bmiColors[1];
 } BITMAPINFO, *PBITMAPINFO;
 
+typedef int32_t HRESULT;
+#define S_OK 0
+#define E_FAIL 0x80004005
 #endif
 
 
