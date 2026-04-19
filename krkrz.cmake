@@ -2,9 +2,6 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-# プラグイン用共通マクロ
-define_property(GLOBAL PROPERTY KRKRZ_PLUGINS)
-
 set(TPSTUB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../tp_stub CACHE PATH "Path to tp_stub library")
 set(NCBIND_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../ncbind CACHE PATH "Path to ncbind library")
 set(SIMPLEBIND_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../simplebinder CACHE PATH "Path to simplebinder library")
