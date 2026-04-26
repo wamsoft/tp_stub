@@ -159,6 +159,7 @@ typedef int32_t HRESULT;
 #ifdef __cplusplus
 typedef wchar_t tjs_char;
 typedef std::wstring tjs_string;
+typedef std::wstring_view tjs_string_view;
 #else
 typedef tjs_uint16 tjs_char;
 #endif
@@ -170,6 +171,7 @@ typedef tjs_uint16 tjs_char;
 #ifdef __cplusplus
 typedef char16_t tjs_char;
 typedef std::u16string tjs_string;
+typedef std::u16string_view tjs_string_view;
 #else
 typedef tjs_uint16 tjs_char;
 #endif
@@ -1991,6 +1993,7 @@ extern void * TVPImportFuncPtrdc4638a6d9301e4ef931d919b29069b1;
 extern void * TVPImportFuncPtrc07314686fdf5815ce9b058020da942b;
 extern void * TVPImportFuncPtr581e2f97e39c52288fbe8a7e27db42be;
 extern void * TVPImportFuncPtr5ba849cb06e05d9e4c33fa45c1b2a898;
+extern void * TVPImportFuncPtrf888257e8312a6d5430f932eddd38a7d;
 extern void * TVPImportFuncPtr45107c5ffc5bf3c84d0ace151e8da8e4;
 extern void * TVPImportFuncPtr4a197be1985d45ee86d5672d24134560;
 extern void * TVPImportFuncPtrdec720a9c3cd2b378f195cf71a9ff8b0;
@@ -2087,6 +2090,7 @@ extern void * TVPImportFuncPtr78390a3d08879903ee9558e9df68db4d;
 extern void * TVPImportFuncPtr58e9454d7096a52808f9a83b9ce25ff0;
 extern void * TVPImportFuncPtrcdefadd0c3bf15b4639b2f0338a40585;
 extern void * TVPImportFuncPtr4bf80e9bac16b9e3f9bf385b2fbce657;
+extern void * TVPImportFuncPtr5a2f993178f197ce37a2fb093fd3be59;
 extern void * TVPImportFuncPtr51aeacf2b6ef9deb01c3b3db201d6bf9;
 extern void * TVPImportFuncPtr9ed5432d73448da47991df9577ee97bc;
 extern void * TVPImportFuncPtrcf1d02d1cc1aff0aae6c038c95dac80f;
@@ -4707,6 +4711,9 @@ public:
 
 	virtual bool TJS_INTF_METHOD Move(const ttstr & from, const ttstr & to) = 0;
 		// move file or directory. "from" and "to" are normalized but do not contain media name.		
+
+	virtual tjs_uint64 TJS_INTF_METHOD  LastModifiedFileTime(const ttstr &name) = 0;	
+		// returns last modified file time in 100-nanosecond intervals since January 1, 1601 (UTC).
 };
 
 //---------------------------------------------------------------------------
@@ -7466,6 +7473,16 @@ inline bool TVPMoveStorage(const ttstr & from , const ttstr & to)
 	typedef bool (STDCALL * __functype)(const ttstr &, const ttstr &);
 	return ((__functype)(TVPImportFuncPtr5ba849cb06e05d9e4c33fa45c1b2a898))(from, to);
 }
+inline tjs_uint64 TVPLastModifiedFileTimeStorage(const ttstr & name)
+{
+	if(!TVPImportFuncPtrf888257e8312a6d5430f932eddd38a7d)
+	{
+		static char funcname[] = "tjs_uint64 ::TVPLastModifiedFileTimeStorage(const ttstr &)";
+		TVPImportFuncPtrf888257e8312a6d5430f932eddd38a7d = TVPGetImportFuncPtr(funcname);
+	}
+	typedef tjs_uint64 (STDCALL * __functype)(const ttstr &);
+	return ((__functype)(TVPImportFuncPtrf888257e8312a6d5430f932eddd38a7d))(name);
+}
 inline iTJSBinaryStream * TVPCreateStream(const ttstr & name , tjs_uint32 flags = 0)
 {
 	if(!TVPImportFuncPtr45107c5ffc5bf3c84d0ace151e8da8e4)
@@ -8437,6 +8454,16 @@ inline void TVPAddImportantLog(const ttstr & line)
 	}
 	typedef void (STDCALL * __functype)(const ttstr &);
 	((__functype)(TVPImportFuncPtr4bf80e9bac16b9e3f9bf385b2fbce657))(line);
+}
+inline ttstr TVPPrettyPrint(const tTJSVariant & variant , int depth , bool compact)
+{
+	if(!TVPImportFuncPtr5a2f993178f197ce37a2fb093fd3be59)
+	{
+		static char funcname[] = "ttstr ::TVPPrettyPrint(const tTJSVariant &,int,bool)";
+		TVPImportFuncPtr5a2f993178f197ce37a2fb093fd3be59 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef ttstr (STDCALL * __functype)(const tTJSVariant &, int , bool);
+	return ((__functype)(TVPImportFuncPtr5a2f993178f197ce37a2fb093fd3be59))(variant, depth, compact);
 }
 inline void TVPPushEnvironNoise(const void * buf , tjs_int bufsize)
 {
