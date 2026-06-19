@@ -1994,6 +1994,7 @@ extern void * TVPImportFuncPtrc07314686fdf5815ce9b058020da942b;
 extern void * TVPImportFuncPtr581e2f97e39c52288fbe8a7e27db42be;
 extern void * TVPImportFuncPtr5ba849cb06e05d9e4c33fa45c1b2a898;
 extern void * TVPImportFuncPtrf888257e8312a6d5430f932eddd38a7d;
+extern void * TVPImportFuncPtr681a099d6878004158d90a6f0a77f124;
 extern void * TVPImportFuncPtr45107c5ffc5bf3c84d0ace151e8da8e4;
 extern void * TVPImportFuncPtr4a197be1985d45ee86d5672d24134560;
 extern void * TVPImportFuncPtrdec720a9c3cd2b378f195cf71a9ff8b0;
@@ -2035,6 +2036,7 @@ extern void * TVPImportFuncPtrdf55083347df0483b4ca6ba1e4f0b9a0;
 extern void * TVPImportFuncPtrd8d28310f702714733c4c5dc850058df;
 extern void * TVPImportFuncPtr52d24c38b05be174bc5c4fdcf02e9b9f;
 extern void * TVPImportFuncPtrf27f455c8f30cbaf1706faac3c7b8e02;
+extern void * TVPImportFuncPtrf6d0533e3fd457217b426ac6f04d9f12;
 extern void * TVPImportFuncPtr78ec453a50b2800bb01347e8ebbac000;
 extern void * TVPImportFuncPtr0936d0f6fc53339d255893e58bcc6699;
 extern void * TVPImportFuncPtrf4f7181b7fd679784c50b0cc7ba4c60e;
@@ -2080,6 +2082,7 @@ extern void * TVPImportFuncPtrbe5b11fe4aed2ce17ef781b7daca130a;
 extern void * TVPImportFuncPtrfb3b405f8747b54f26c332b9e6af81cd;
 extern void * TVPImportFuncPtrb7ccd11d130f186883c109d2ba17b598;
 extern void * TVPImportFuncPtrcf8ab6c24f25993ccc7663e572ac2991;
+extern void * TVPImportFuncPtrd9128f12d3d74ab9d17926fb5b3dcc48;
 extern void * TVPImportFuncPtrba40ffbca76695b54a02aa8c1f1e047b;
 extern void * TVPImportFuncPtr59b6101c4aef3dd58c5f4e7d66289f88;
 extern void * TVPImportFuncPtrdc4fd55a66925c6989f121a4f2f7d79a;
@@ -2112,6 +2115,9 @@ extern void * TVPImportFuncPtr0d316a141f7a502ff8d9ffe2d38d25a8;
 extern void * TVPImportFuncPtrb31ff64ae2d8f93dbf28161d5080b295;
 extern void * TVPImportFuncPtrd9b1c73516daea6a9c6564e2b731615a;
 extern void * TVPImportFuncPtr003f9d3de568fcd71dd532f33d38839c;
+extern void * TVPImportFuncPtrf0890a90b825930e4e5997ed171326b1;
+extern void * TVPImportFuncPtre209729d9d40a6b0952ab83f2ed03e85;
+extern void * TVPImportFuncPtrfe0e5e6794695d7f937e468803528ac5;
 extern void * TVPImportFuncPtr5da29a19bbe279a89be00e16c59d7641;
 extern void * TVPImportFuncPtrc1b52e8f3578d11f369552a887e13c5b;
 extern void * TVPImportFuncPtrb94ead6de9316bc65758c5aefb564078;
@@ -2120,6 +2126,7 @@ extern void * TVPImportFuncPtr5b1fa785e397e643dd09cb43c2f2f4db;
 extern void * TVPImportFuncPtr29af78765c764c566e6adc77e0ea7041;
 extern void * TVPImportFuncPtr9e0df54e4c24ee28d5517c1743faa3a3;
 extern void * TVPImportFuncPtrd3aaa55d66777d7308ffa7a348c84841;
+extern void * TVPImportFuncPtr328abd2747ba44cb50a6570a88923f0b;
 extern void * TVPImportFuncPtrb426fbfb6ccb4e89c252b6af566995b8;
 extern void * TVPImportFuncPtrc145419db7b63f7488ea05a2a8826c1d;
 extern void * TVPImportFuncPtrd795cd5ebfb6ca6f1b91bafbe66d7a65;
@@ -4712,8 +4719,11 @@ public:
 	virtual bool TJS_INTF_METHOD Move(const ttstr & from, const ttstr & to) = 0;
 		// move file or directory. "from" and "to" are normalized but do not contain media name.		
 
-	virtual tjs_uint64 TJS_INTF_METHOD  LastModifiedFileTime(const ttstr &name) = 0;	
+	virtual tjs_uint64 TJS_INTF_METHOD  LastModifiedFileTime(const ttstr &name) = 0;
 		// returns last modified file time in 100-nanosecond intervals since January 1, 1601 (UTC).
+
+	virtual tjs_uint64 TJS_INTF_METHOD  FileSize(const ttstr &name) = 0;
+		// returns file size in bytes. if the file does not exist or size cannot be determined, return 0.
 };
 
 //---------------------------------------------------------------------------
@@ -4904,7 +4914,7 @@ class tTVPNativeThreadIntf
 {
 public:
 	virtual ~tTVPNativeThreadIntf() {};
-	virtual void Start(tTVPThreadFunc func, void *arg, tTVPThreadPriority pri) = 0;
+	virtual void Start(tTVPThreadFunc func, void *arg, tTVPThreadPriority pri, const char *name) = 0;
 	virtual void WaitFor() = 0;
 	virtual void SetPriority(tTVPThreadPriority pri) = 0;
 	virtual void SetProcessorNo(int no) = 0;
@@ -4915,7 +4925,7 @@ public:
 
 
 
-const tjs_int TVPMaxThreadNum = 8;
+const tjs_int TVPMaxThreadNum = 64;
 typedef void (TJS_USERENTRY *TVP_THREAD_TASK_FUNC)(void *);
 typedef void * TVP_THREAD_PARAM;
 
@@ -4963,6 +4973,47 @@ struct tTVPWaveFormat
 
 
 
+
+
+//---------------------------------------------------------------------------
+// tTVPWaveDecoder interface
+//---------------------------------------------------------------------------
+class tTVPWaveDecoder
+{
+public:
+	virtual ~tTVPWaveDecoder() {};
+
+	virtual void GetFormat(tTVPWaveFormat & format) = 0;
+		/* Retrieve PCM format, etc. */
+
+	virtual bool Render(void *buf, tjs_uint bufsamplelen, tjs_uint& rendered) = 0;
+		/*
+			Render PCM from current position.
+			where "buf" is a destination buffer, "bufsamplelen" is the buffer's
+			length in sample granule, "rendered" is to be an actual number of
+			written sample granule.
+			returns whether the decoding is to be continued.
+			because "redered" can be lesser than "bufsamplelen", the player
+			should not end until the returned value becomes false.
+		*/
+
+	virtual bool SetPosition(tjs_uint64 samplepos) = 0;
+		/*
+			Seek to "samplepos". "samplepos" must be given in unit of sample granule.
+			returns whether the seeking is succeeded.
+		*/
+};
+//---------------------------------------------------------------------------
+class tTVPWaveDecoderCreator
+{
+public:
+	virtual tTVPWaveDecoder * Create(const ttstr & storagename,
+		const ttstr &extension) = 0;
+		/*
+			Create tTVPWaveDecoder instance. returns NULL if failed.
+		*/
+};
+//---------------------------------------------------------------------------
 
 
 //---------------------------------------------------------------------------
@@ -5835,9 +5886,9 @@ public:
 
 
 //---------------------------------------------------------------------------
-// window message receivers
+// window message receivers (WIN 版)
 //---------------------------------------------------------------------------
-#ifdef _WIN32
+#ifdef __WINVER__
 enum tTVPWMRRegMode { wrmRegister=0, wrmUnregister=1 };
 #pragma pack(push, 4)
 struct tTVPWindowMessage
@@ -5855,6 +5906,34 @@ typedef bool (__stdcall * tTVPWindowMessageReceiver)
 #define TVP_WM_ATTACH (WM_USER+107)  // after re-generating the window
 #define TVP_WM_FULLSCREEN_CHANGING (WM_USER+108)  // before full-screen or window changing
 #define TVP_WM_FULLSCREEN_CHANGED  (WM_USER+109)  // after full-screen or window changing
+#endif
+
+
+
+//---------------------------------------------------------------------------
+// window message receivers (Generic 版)
+//---------------------------------------------------------------------------
+// 配信は Application の SendAppEvent 経由の非同期処理なので Result は無効
+// （呼び出し元には返らない）。doc/AppEvent.md 参照。
+#ifdef __GENERIC__
+enum tTVPWMRRegMode { wrmRegister=0, wrmUnregister=1 };
+struct tTVPWindowMessage
+{
+	tjs_uint32 Msg;    // window message id
+	tjs_uint64 WParam;
+	tjs_uint64 LParam;
+	tjs_uint64 Result; // 非同期配信のため無効。互換のため保持
+};
+typedef bool (* tTVPWindowMessageReceiver)
+	(void *userdata, tTVPWindowMessage *Message);
+
+// Generic 用のメッセージ ID 帯域。WM_USER 由来でない固定数値。
+// プラグインは TVP_WM_USER 以降を自由に使用可能。
+#define TVP_WM_USER 0x8000
+#define TVP_WM_DETACH (TVP_WM_USER+106)
+#define TVP_WM_ATTACH (TVP_WM_USER+107)
+#define TVP_WM_FULLSCREEN_CHANGING (TVP_WM_USER+108)
+#define TVP_WM_FULLSCREEN_CHANGED  (TVP_WM_USER+109)
 #endif
 
 
@@ -6274,6 +6353,27 @@ public:
 	//! @note		このメソッドは、VSync待ちを有効にするかどうかを設定する。
 	//!				有効にすると、描画デバイスは低層側の機能で VSYnc を待つ
 	virtual void SetWaitVSync(bool enable) = 0;
+
+	//---------------------------------------------------------------------------
+	// ビューポート余白塗り (ゲーム画面が surface 全面を覆わないときの周囲)
+	//---------------------------------------------------------------------------
+
+	//! @brief		(Window->DrawDevice) 余白の背景色を設定する
+	//! @param		color	0xAARRGGBB
+	//! @note		既定は no-op。tTVPDrawDevice が保持・描画する。
+	//!				iTVPDrawDevice 直接実装 (NullDrawDevice 等) は何もしない。
+	virtual void SetViewportBackgroundColor(tjs_uint32 color) {}
+
+	//! @brief		(Window->DrawDevice) 余白の壁紙を設定する
+	//! @param		bmp		壁紙ビットマップ (内部でコピー/アップロード)。null でクリア。
+	//! @param		fit		壁紙のフィット方式
+	//! @param		alignX	水平配置 0..1
+	//! @param		alignY	垂直配置 0..1
+	virtual void SetViewportWallpaper(const tTVPBaseBitmap *bmp,
+		tTVPViewportFit fit, double alignX, double alignY) {}
+
+	//! @brief		(Window->DrawDevice) 余白の壁紙をクリアする
+	virtual void ClearViewportWallpaper() {}
 #endif
 
 };
@@ -7483,6 +7583,16 @@ inline tjs_uint64 TVPLastModifiedFileTimeStorage(const ttstr & name)
 	typedef tjs_uint64 (STDCALL * __functype)(const ttstr &);
 	return ((__functype)(TVPImportFuncPtrf888257e8312a6d5430f932eddd38a7d))(name);
 }
+inline tjs_uint64 TVPFileSizeStorage(const ttstr & name)
+{
+	if(!TVPImportFuncPtr681a099d6878004158d90a6f0a77f124)
+	{
+		static char funcname[] = "tjs_uint64 ::TVPFileSizeStorage(const ttstr &)";
+		TVPImportFuncPtr681a099d6878004158d90a6f0a77f124 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef tjs_uint64 (STDCALL * __functype)(const ttstr &);
+	return ((__functype)(TVPImportFuncPtr681a099d6878004158d90a6f0a77f124))(name);
+}
 inline iTJSBinaryStream * TVPCreateStream(const ttstr & name , tjs_uint32 flags = 0)
 {
 	if(!TVPImportFuncPtr45107c5ffc5bf3c84d0ace151e8da8e4)
@@ -7892,6 +8002,16 @@ inline ttstr TVPGetOSName()
 	}
 	typedef ttstr (STDCALL * __functype)();
 	return ((__functype)(TVPImportFuncPtrf27f455c8f30cbaf1706faac3c7b8e02))();
+}
+inline ttstr TVPGetBuildVariantName()
+{
+	if(!TVPImportFuncPtrf6d0533e3fd457217b426ac6f04d9f12)
+	{
+		static char funcname[] = "ttstr ::TVPGetBuildVariantName()";
+		TVPImportFuncPtrf6d0533e3fd457217b426ac6f04d9f12 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef ttstr (STDCALL * __functype)();
+	return ((__functype)(TVPImportFuncPtrf6d0533e3fd457217b426ac6f04d9f12))();
 }
 #ifdef __WINVER__
 inline bool TVPGetAsyncKeyState(tjs_uint keycode , bool getcurrent = true)
@@ -8353,6 +8473,16 @@ inline void TVPSetCommandLine(const tjs_char * name , const ttstr & value)
 	typedef void (STDCALL * __functype)(const tjs_char *, const ttstr &);
 	((__functype)(TVPImportFuncPtrcf8ab6c24f25993ccc7663e572ac2991))(name, value);
 }
+inline int TVPGetCommandLineInt(const tjs_char * name , int defaultValue)
+{
+	if(!TVPImportFuncPtrd9128f12d3d74ab9d17926fb5b3dcc48)
+	{
+		static char funcname[] = "int ::TVPGetCommandLineInt(const tjs_char *,int)";
+		TVPImportFuncPtrd9128f12d3d74ab9d17926fb5b3dcc48 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef int (STDCALL * __functype)(const tjs_char *, int);
+	return ((__functype)(TVPImportFuncPtrd9128f12d3d74ab9d17926fb5b3dcc48))(name, defaultValue);
+}
 #ifdef __WINVER__
 inline tjs_uint32 TVPGetCPUType()
 {
@@ -8675,6 +8805,36 @@ inline void TVPConvertPCMToFloat(float * output , const void * input , const tTV
 	typedef void (STDCALL * __functype)(float *, const void *, const tTVPWaveFormat &, tjs_int);
 	((__functype)(TVPImportFuncPtr003f9d3de568fcd71dd532f33d38839c))(output, input, format, count);
 }
+inline void TVPRegisterWaveDecoderCreator(tTVPWaveDecoderCreator * d)
+{
+	if(!TVPImportFuncPtrf0890a90b825930e4e5997ed171326b1)
+	{
+		static char funcname[] = "void ::TVPRegisterWaveDecoderCreator(tTVPWaveDecoderCreator *)";
+		TVPImportFuncPtrf0890a90b825930e4e5997ed171326b1 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef void (STDCALL * __functype)(tTVPWaveDecoderCreator *);
+	((__functype)(TVPImportFuncPtrf0890a90b825930e4e5997ed171326b1))(d);
+}
+inline void TVPUnregisterWaveDecoderCreator(tTVPWaveDecoderCreator * d)
+{
+	if(!TVPImportFuncPtre209729d9d40a6b0952ab83f2ed03e85)
+	{
+		static char funcname[] = "void ::TVPUnregisterWaveDecoderCreator(tTVPWaveDecoderCreator *)";
+		TVPImportFuncPtre209729d9d40a6b0952ab83f2ed03e85 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef void (STDCALL * __functype)(tTVPWaveDecoderCreator *);
+	((__functype)(TVPImportFuncPtre209729d9d40a6b0952ab83f2ed03e85))(d);
+}
+inline tTVPWaveDecoder * TVPCreateWaveDecoder(const ttstr & storagename)
+{
+	if(!TVPImportFuncPtrfe0e5e6794695d7f937e468803528ac5)
+	{
+		static char funcname[] = "tTVPWaveDecoder * ::TVPCreateWaveDecoder(const ttstr &)";
+		TVPImportFuncPtrfe0e5e6794695d7f937e468803528ac5 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef tTVPWaveDecoder * (STDCALL * __functype)(const ttstr &);
+	return ((__functype)(TVPImportFuncPtrfe0e5e6794695d7f937e468803528ac5))(storagename);
+}
 #ifdef __WINVER__
 inline void TVPReleaseDirectSound()
 {
@@ -8762,6 +8922,16 @@ inline iTJSDispatch2 * TVPGetObjectFrom_NI_BaseLayer(tTJSNI_BaseLayer * layer)
 	}
 	typedef iTJSDispatch2 * (STDCALL * __functype)(tTJSNI_BaseLayer *);
 	return ((__functype)(TVPImportFuncPtrd3aaa55d66777d7308ffa7a348c84841))(layer);
+}
+inline void TVPPostWindowMessage(void * window , tjs_uint32 message , tjs_uint64 wparam , tjs_uint64 lparam)
+{
+	if(!TVPImportFuncPtr328abd2747ba44cb50a6570a88923f0b)
+	{
+		static char funcname[] = "void ::TVPPostWindowMessage(void *,tjs_uint32,tjs_uint64,tjs_uint64)";
+		TVPImportFuncPtr328abd2747ba44cb50a6570a88923f0b = TVPGetImportFuncPtr(funcname);
+	}
+	typedef void (STDCALL * __functype)(void *, tjs_uint32 , tjs_uint64 , tjs_uint64);
+	((__functype)(TVPImportFuncPtr328abd2747ba44cb50a6570a88923f0b))(window, message, wparam, lparam);
 }
 #ifdef __WINVER__
 inline tjs_uint32 TVPGetCurrentShiftKeyState()
