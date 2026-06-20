@@ -5939,6 +5939,19 @@ typedef bool (* tTVPWindowMessageReceiver)
 
 
 //---------------------------------------------------------------------------
+//! @brief	ゲーム画面のフィット方式 (CSS object-fit + ピクセルパーフェクト系)
+//---------------------------------------------------------------------------
+enum tTVPViewportFit {
+	vfContain = 0, //!< アスペクト維持で収まる最大 (従来デフォルト / letterbox)
+	vfCover,       //!< アスペクト維持で埋める最小 (はみ出しは clip)
+	vfFill,        //!< アスペクト無視で surface 全面へ引き伸ばし
+	vfNone,        //!< 原寸 (scale = 1.0)
+	vfInteger,     //!< 収まる範囲で最大の整数倍 (最低 1 倍、ドット等倍維持)
+	vfCustom,      //!< 明示倍率 (customScale) を使用
+};
+
+
+//---------------------------------------------------------------------------
 //! @brief		描画デバイスインターフェース
 //---------------------------------------------------------------------------
 class iTVPDrawDevice
@@ -6365,11 +6378,15 @@ public:
 	virtual void SetViewportBackgroundColor(tjs_uint32 color) {}
 
 	//! @brief		(Window->DrawDevice) 余白の壁紙を設定する
-	//! @param		bmp		壁紙ビットマップ (内部でコピー/アップロード)。null でクリア。
+	//! @param		image	壁紙となる Layer / Bitmap オブジェクトを保持する Variant。
+	//!						void / null でクリア。tTJSVariant が参照を保持するので
+	//!						イメージデータは維持される。描画デバイス (プラグイン可) は
+	//!						imageWidth/imageHeight/mainImageBuffer/mainImageBufferPitch
+	//!						プロパティから画像イメージを取得する (内部型は渡さない)。
 	//! @param		fit		壁紙のフィット方式
 	//! @param		alignX	水平配置 0..1
 	//! @param		alignY	垂直配置 0..1
-	virtual void SetViewportWallpaper(const tTVPBaseBitmap *bmp,
+	virtual void SetViewportWallpaper(const tTJSVariant &image,
 		tTVPViewportFit fit, double alignX, double alignY) {}
 
 	//! @brief		(Window->DrawDevice) 余白の壁紙をクリアする
