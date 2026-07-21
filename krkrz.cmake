@@ -42,6 +42,12 @@ function(krkrz_plugin PROJECT_NAME)
 
     add_library(${PROJECT_NAME} ${TVP_LIBRARY_TYPE} ${KRKRZ_SOURCES})
 
+    # 生成したプラグインターゲット名を GLOBAL プロパティに登録する。
+    # 本体側 (src/core の TVP_PLUGINS ループ) は add_subdirectory 前後の差分から
+    # このリストを参照し、フォルダ名と異なるターゲット名や 1 フォルダ複数
+    # プラグイン (例: motion → krkrmotion + krkremote) を検出する。
+    set_property(GLOBAL APPEND PROPERTY KRKRZ_PLUGIN_TARGETS ${PROJECT_NAME})
+
     if (TVP_STATIC_PLUGIN OR KRKRZ_STATIC)
         target_compile_definitions(${PROJECT_NAME} PRIVATE
             TVP_STATIC_PLUGIN
