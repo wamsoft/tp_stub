@@ -2131,6 +2131,26 @@ extern void * TVPImportFuncPtrc1b52e8f3578d11f369552a887e13c5b;
 extern void * TVPImportFuncPtrb94ead6de9316bc65758c5aefb564078;
 extern void * TVPImportFuncPtr8a35be936d2aca049e398a081e511c97;
 extern void * TVPImportFuncPtr5b1fa785e397e643dd09cb43c2f2f4db;
+extern void * TVPImportFuncPtr1348697e6f4b35aed8d24d400a3b2a26;
+extern void * TVPImportFuncPtr2ca138bc7241e0682c17ce98e71b4aaf;
+extern void * TVPImportFuncPtr271e00bedba83a2d5e3cc9e9ac1c28f1;
+extern void * TVPImportFuncPtr812dfc2cf895674425ce57802e63339d;
+extern void * TVPImportFuncPtrbbecc474e3aba1dd77e88e4821fd221f;
+extern void * TVPImportFuncPtrb75bbcdc26e39540e6ecaf8c18bd0b6d;
+extern void * TVPImportFuncPtr63a2c7fbc7ab040e97aacd3480b155bd;
+extern void * TVPImportFuncPtrb3970f4c77baef13c8714f2f537785f7;
+extern void * TVPImportFuncPtra5253c5dedda6e768c73137d6385e606;
+extern void * TVPImportFuncPtr05c2c35211fceb300a3bc78e9ee809cc;
+extern void * TVPImportFuncPtr2f10e49a2fbf631fa0b58fb1c38bd19d;
+extern void * TVPImportFuncPtradddea31a193434a847e7ea79726b281;
+extern void * TVPImportFuncPtr148f6a8cc9f1a43675228bffe72bd40a;
+extern void * TVPImportFuncPtrf04a0ad81b46a20ada9358df7ebad270;
+extern void * TVPImportFuncPtr36f3e06e3c9e017af6c4e202c266bccc;
+extern void * TVPImportFuncPtr0ac0bd4880785e95101ba89358e520b6;
+extern void * TVPImportFuncPtrb94f07b4177d8429b503019c1a62e97f;
+extern void * TVPImportFuncPtr06b6412ffa8ad0f01f8e1fcad2532301;
+extern void * TVPImportFuncPtrc984bdefc1190df4eea9813e2f110990;
+extern void * TVPImportFuncPtrc9292a7a5f30ecde00e8fc501aaa97b1;
 extern void * TVPImportFuncPtr29af78765c764c566e6adc77e0ea7041;
 extern void * TVPImportFuncPtr9e0df54e4c24ee28d5517c1743faa3a3;
 extern void * TVPImportFuncPtrd3aaa55d66777d7308ffa7a348c84841;
@@ -5112,6 +5132,139 @@ typedef void (*tTVPGraphicSaveHandlerForPlugin)(void* formatdata, void* callback
 #define TVP_FSF_IGNORESYMBOL  0x10      // fsfIgnoreSymbol
 #define TVP_FSF_USEFONTFACE   0x100  // fsfUseFontFace
 
+
+
+//---------------------------------------------------------------------------
+// フォントサービス 型定義
+//---------------------------------------------------------------------------
+
+// 不透明ハンドル
+typedef void * tTVPFontBufferHandle;     // 共有フォントバッファの保持ハンドル
+typedef void * tTVPFontFaceHandle;       // 単一フォント face
+typedef void * tTVPFontFaceChainHandle;  // フォールバック連鎖
+
+// face 全体のラインメトリクス (現在のピクセルサイズ基準。offset は baseline
+// からの距離で下方向が正)
+struct tTVPFontLineMetrics
+{
+	float Ascent;
+	float Descent;              // 下方向の広がり (正値)
+	float LineGap;
+	float UnitsPerEm;           // アウトライン (フォントユニット) のスケール基準
+	float UnderlineOffset;
+	float UnderlineThickness;
+	float StrikeoutOffset;
+	float StrikeoutThickness;
+};
+
+// グリフ単位のメトリクス (ピクセル)
+struct tTVPFontGlyphMetrics
+{
+	float AdvanceX;
+	float AdvanceY;
+	float BearingX;
+	float BearingY;
+	float Width;
+	float Height;
+};
+
+// グリフビットマップ形式
+#define TVP_FONT_BITMAP_GRAY	0	// 1 byte/px (0-255, 256 階調)
+#define TVP_FONT_BITMAP_BGRA	2	// 4 byte/px BGRA (カラー絵文字、前乗算済)
+
+// グリフビットマップ。Buffer は同一 face への次のグリフ取得呼び出しまで有効
+// (必要ならコピーして保持すること)
+struct tTVPFontGlyphBitmap
+{
+	tjs_int Format;             // TVP_FONT_BITMAP_*
+	tjs_int Left;               // ビットマップ原点への bearing
+	tjs_int Top;
+	tjs_int Width;
+	tjs_int Height;
+	tjs_int Pitch;              // バイト/行 (負値ならボトムアップ)
+	const tjs_uint8 * Buffer;
+};
+
+// アウトライン受け取りインターフェース。座標は**フォントユニット** (y-up、
+// FreeType 格納系)。ピクセルへは pixelSize / UnitsPerEm 倍で変換する
+class iTVPFontOutlineSink
+{
+public:
+	virtual void TJS_INTF_METHOD MoveTo(float x, float y) = 0;
+	virtual void TJS_INTF_METHOD LineTo(float x, float y) = 0;
+	virtual void TJS_INTF_METHOD QuadTo(float cx, float cy, float x, float y) = 0;
+	virtual void TJS_INTF_METHOD CubicTo(float c1x, float c1y, float c2x, float c2y,
+		float x, float y) = 0;
+	virtual void TJS_INTF_METHOD ClosePath() = 0;
+};
+
+// 1 行レイアウトの整形済みグリフ (視覚順・x 昇順)。X/Y はペン位置 (baseline
+// 原点、ピクセル)、FaceIndexInChain は連鎖内のどの face か
+// (TVPFontChainFaceAt で取得)
+struct tTVPFontShapedGlyph
+{
+	tjs_uint32 GlyphId;
+	tjs_int FaceIndexInChain;
+	float X;
+	float Y;
+	float XOffset;              // シェイパの per-glyph オフセット
+	float YOffset;
+	float Advance;
+	tjs_uint32 Cluster;         // 元 UTF-8 文字列へのバイトオフセット
+	bool RTL;
+};
+
+// 1 行レイアウト結果の受け取りインターフェース。Begin が 1 回呼ばれた後、
+// グリフ数だけ Glyph が呼ばれる
+class iTVPFontShapeSink
+{
+public:
+	virtual void TJS_INTF_METHOD Begin(tjs_int glyphCount, float width,
+		float ascent, float descent) = 0;
+	virtual void TJS_INTF_METHOD Glyph(const tTVPFontShapedGlyph & glyph) = 0;
+};
+
+// ベース方向 (TVPFontShapeLine)
+#define TVP_FONT_BASEDIR_AUTO	0
+#define TVP_FONT_BASEDIR_LTR	1
+#define TVP_FONT_BASEDIR_RTL	2
+
+// リッチ検索の条件。未指定 (-1 / 空文字列) の項目は制約しない
+struct tTVPFontQueryParams
+{
+	ttstr Name;                 // family / 別名 / fullName / PostScript 名
+	tjs_int Weight;             // 100-900 (OS/2 usWeightClass)、-1=不問
+	tjs_int Slant;              // 0=normal 1=italic 2=oblique、-1=不問
+	ttstr Script;               // ISO-15924 タグ (例 "Jpan" "Hans")
+	ttstr ContainsText;         // この文字列の全コードポイントを収録すること
+	tjs_int Monospace;          // 0/1、-1=不問
+	tjs_int Color;              // 0/1 (カラー絵文字)、-1=不問
+	tTVPFontQueryParams() : Weight(-1), Slant(-1), Monospace(-1), Color(-1) {}
+};
+
+// 検索結果 / メタデータ照会の 1 face 分の情報
+struct tTVPFontFaceInfo
+{
+	ttstr Key;                  // フォントキー (TVPFontAcquireFace に渡せる)
+	tjs_int FaceIndex;
+	ttstr Family;
+	ttstr Subfamily;
+	ttstr FullName;
+	ttstr PostScriptName;
+	tjs_int Weight;             // 100-900
+	tjs_int Slant;              // 0=normal 1=italic 2=oblique
+	bool Bold;
+	bool Color;
+	bool Monospace;
+	bool Scalable;
+};
+
+// 検索結果の受け取りインターフェース (ランク順に Found が呼ばれる)
+class iTVPFontQuerySink
+{
+public:
+	virtual void TJS_INTF_METHOD Found(const tTVPFontFaceInfo & info) = 0;
+};
 
 
 //---------------------------------------------------------------------------
@@ -9025,6 +9178,206 @@ inline void TVPClearGraphicCache()
 	typedef void (STDCALL * __functype)();
 	((__functype)(TVPImportFuncPtr5b1fa785e397e643dd09cb43c2f2f4db))();
 }
+inline iTJSBinaryStream * TVPCreateFontStream(const ttstr & storage)
+{
+	if(!TVPImportFuncPtr1348697e6f4b35aed8d24d400a3b2a26)
+	{
+		static char funcname[] = "iTJSBinaryStream * ::TVPCreateFontStream(const ttstr &)";
+		TVPImportFuncPtr1348697e6f4b35aed8d24d400a3b2a26 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef iTJSBinaryStream * (STDCALL * __functype)(const ttstr &);
+	return ((__functype)(TVPImportFuncPtr1348697e6f4b35aed8d24d400a3b2a26))(storage);
+}
+inline tTVPFontBufferHandle TVPAcquireFontBuffer(const ttstr & storage , const tjs_uint8 * * data , tjs_uint64 * size)
+{
+	if(!TVPImportFuncPtr2ca138bc7241e0682c17ce98e71b4aaf)
+	{
+		static char funcname[] = "tTVPFontBufferHandle ::TVPAcquireFontBuffer(const ttstr &,const tjs_uint8 * *,tjs_uint64 *)";
+		TVPImportFuncPtr2ca138bc7241e0682c17ce98e71b4aaf = TVPGetImportFuncPtr(funcname);
+	}
+	typedef tTVPFontBufferHandle (STDCALL * __functype)(const ttstr &, const tjs_uint8 * *, tjs_uint64 *);
+	return ((__functype)(TVPImportFuncPtr2ca138bc7241e0682c17ce98e71b4aaf))(storage, data, size);
+}
+inline void TVPReleaseFontBuffer(tTVPFontBufferHandle buffer)
+{
+	if(!TVPImportFuncPtr271e00bedba83a2d5e3cc9e9ac1c28f1)
+	{
+		static char funcname[] = "void ::TVPReleaseFontBuffer(tTVPFontBufferHandle)";
+		TVPImportFuncPtr271e00bedba83a2d5e3cc9e9ac1c28f1 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef void (STDCALL * __functype)(tTVPFontBufferHandle);
+	((__functype)(TVPImportFuncPtr271e00bedba83a2d5e3cc9e9ac1c28f1))(buffer);
+}
+inline ttstr TVPFontResolveKey(const ttstr & nameOrPath)
+{
+	if(!TVPImportFuncPtr812dfc2cf895674425ce57802e63339d)
+	{
+		static char funcname[] = "ttstr ::TVPFontResolveKey(const ttstr &)";
+		TVPImportFuncPtr812dfc2cf895674425ce57802e63339d = TVPGetImportFuncPtr(funcname);
+	}
+	typedef ttstr (STDCALL * __functype)(const ttstr &);
+	return ((__functype)(TVPImportFuncPtr812dfc2cf895674425ce57802e63339d))(nameOrPath);
+}
+inline bool TVPFontNameKnown(const ttstr & name)
+{
+	if(!TVPImportFuncPtrbbecc474e3aba1dd77e88e4821fd221f)
+	{
+		static char funcname[] = "bool ::TVPFontNameKnown(const ttstr &)";
+		TVPImportFuncPtrbbecc474e3aba1dd77e88e4821fd221f = TVPGetImportFuncPtr(funcname);
+	}
+	typedef bool (STDCALL * __functype)(const ttstr &);
+	return ((__functype)(TVPImportFuncPtrbbecc474e3aba1dd77e88e4821fd221f))(name);
+}
+inline tTVPFontFaceHandle TVPFontAcquireFace(const ttstr & nameOrPath)
+{
+	if(!TVPImportFuncPtrb75bbcdc26e39540e6ecaf8c18bd0b6d)
+	{
+		static char funcname[] = "tTVPFontFaceHandle ::TVPFontAcquireFace(const ttstr &)";
+		TVPImportFuncPtrb75bbcdc26e39540e6ecaf8c18bd0b6d = TVPGetImportFuncPtr(funcname);
+	}
+	typedef tTVPFontFaceHandle (STDCALL * __functype)(const ttstr &);
+	return ((__functype)(TVPImportFuncPtrb75bbcdc26e39540e6ecaf8c18bd0b6d))(nameOrPath);
+}
+inline void TVPFontReleaseFace(tTVPFontFaceHandle face)
+{
+	if(!TVPImportFuncPtr63a2c7fbc7ab040e97aacd3480b155bd)
+	{
+		static char funcname[] = "void ::TVPFontReleaseFace(tTVPFontFaceHandle)";
+		TVPImportFuncPtr63a2c7fbc7ab040e97aacd3480b155bd = TVPGetImportFuncPtr(funcname);
+	}
+	typedef void (STDCALL * __functype)(tTVPFontFaceHandle);
+	((__functype)(TVPImportFuncPtr63a2c7fbc7ab040e97aacd3480b155bd))(face);
+}
+inline tTVPFontFaceChainHandle TVPFontAcquireFaceChain(const ttstr & commaSeparatedNames)
+{
+	if(!TVPImportFuncPtrb3970f4c77baef13c8714f2f537785f7)
+	{
+		static char funcname[] = "tTVPFontFaceChainHandle ::TVPFontAcquireFaceChain(const ttstr &)";
+		TVPImportFuncPtrb3970f4c77baef13c8714f2f537785f7 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef tTVPFontFaceChainHandle (STDCALL * __functype)(const ttstr &);
+	return ((__functype)(TVPImportFuncPtrb3970f4c77baef13c8714f2f537785f7))(commaSeparatedNames);
+}
+inline void TVPFontReleaseFaceChain(tTVPFontFaceChainHandle chain)
+{
+	if(!TVPImportFuncPtra5253c5dedda6e768c73137d6385e606)
+	{
+		static char funcname[] = "void ::TVPFontReleaseFaceChain(tTVPFontFaceChainHandle)";
+		TVPImportFuncPtra5253c5dedda6e768c73137d6385e606 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef void (STDCALL * __functype)(tTVPFontFaceChainHandle);
+	((__functype)(TVPImportFuncPtra5253c5dedda6e768c73137d6385e606))(chain);
+}
+inline tjs_int TVPFontChainCount(tTVPFontFaceChainHandle chain)
+{
+	if(!TVPImportFuncPtr05c2c35211fceb300a3bc78e9ee809cc)
+	{
+		static char funcname[] = "tjs_int ::TVPFontChainCount(tTVPFontFaceChainHandle)";
+		TVPImportFuncPtr05c2c35211fceb300a3bc78e9ee809cc = TVPGetImportFuncPtr(funcname);
+	}
+	typedef tjs_int (STDCALL * __functype)(tTVPFontFaceChainHandle);
+	return ((__functype)(TVPImportFuncPtr05c2c35211fceb300a3bc78e9ee809cc))(chain);
+}
+inline tTVPFontFaceHandle TVPFontChainFaceAt(tTVPFontFaceChainHandle chain , tjs_int index)
+{
+	if(!TVPImportFuncPtr2f10e49a2fbf631fa0b58fb1c38bd19d)
+	{
+		static char funcname[] = "tTVPFontFaceHandle ::TVPFontChainFaceAt(tTVPFontFaceChainHandle,tjs_int)";
+		TVPImportFuncPtr2f10e49a2fbf631fa0b58fb1c38bd19d = TVPGetImportFuncPtr(funcname);
+	}
+	typedef tTVPFontFaceHandle (STDCALL * __functype)(tTVPFontFaceChainHandle , tjs_int);
+	return ((__functype)(TVPImportFuncPtr2f10e49a2fbf631fa0b58fb1c38bd19d))(chain, index);
+}
+inline tjs_int TVPFontChainFaceForChar(tTVPFontFaceChainHandle chain , tjs_uint32 codepoint , bool preferLast)
+{
+	if(!TVPImportFuncPtradddea31a193434a847e7ea79726b281)
+	{
+		static char funcname[] = "tjs_int ::TVPFontChainFaceForChar(tTVPFontFaceChainHandle,tjs_uint32,bool)";
+		TVPImportFuncPtradddea31a193434a847e7ea79726b281 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef tjs_int (STDCALL * __functype)(tTVPFontFaceChainHandle , tjs_uint32 , bool);
+	return ((__functype)(TVPImportFuncPtradddea31a193434a847e7ea79726b281))(chain, codepoint, preferLast);
+}
+inline bool TVPFontGetLineMetrics(tTVPFontFaceHandle face , tjs_int pixelSize , tTVPFontLineMetrics * out)
+{
+	if(!TVPImportFuncPtr148f6a8cc9f1a43675228bffe72bd40a)
+	{
+		static char funcname[] = "bool ::TVPFontGetLineMetrics(tTVPFontFaceHandle,tjs_int,tTVPFontLineMetrics *)";
+		TVPImportFuncPtr148f6a8cc9f1a43675228bffe72bd40a = TVPGetImportFuncPtr(funcname);
+	}
+	typedef bool (STDCALL * __functype)(tTVPFontFaceHandle , tjs_int , tTVPFontLineMetrics *);
+	return ((__functype)(TVPImportFuncPtr148f6a8cc9f1a43675228bffe72bd40a))(face, pixelSize, out);
+}
+inline tjs_uint32 TVPFontGetGlyphIndex(tTVPFontFaceHandle face , tjs_uint32 codepoint)
+{
+	if(!TVPImportFuncPtrf04a0ad81b46a20ada9358df7ebad270)
+	{
+		static char funcname[] = "tjs_uint32 ::TVPFontGetGlyphIndex(tTVPFontFaceHandle,tjs_uint32)";
+		TVPImportFuncPtrf04a0ad81b46a20ada9358df7ebad270 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef tjs_uint32 (STDCALL * __functype)(tTVPFontFaceHandle , tjs_uint32);
+	return ((__functype)(TVPImportFuncPtrf04a0ad81b46a20ada9358df7ebad270))(face, codepoint);
+}
+inline bool TVPFontGetGlyphMetrics(tTVPFontFaceHandle face , tjs_uint32 glyphId , tjs_int pixelSize , bool bold , bool italic , tTVPFontGlyphMetrics * out)
+{
+	if(!TVPImportFuncPtr36f3e06e3c9e017af6c4e202c266bccc)
+	{
+		static char funcname[] = "bool ::TVPFontGetGlyphMetrics(tTVPFontFaceHandle,tjs_uint32,tjs_int,bool,bool,tTVPFontGlyphMetrics *)";
+		TVPImportFuncPtr36f3e06e3c9e017af6c4e202c266bccc = TVPGetImportFuncPtr(funcname);
+	}
+	typedef bool (STDCALL * __functype)(tTVPFontFaceHandle , tjs_uint32 , tjs_int , bool , bool , tTVPFontGlyphMetrics *);
+	return ((__functype)(TVPImportFuncPtr36f3e06e3c9e017af6c4e202c266bccc))(face, glyphId, pixelSize, bold, italic, out);
+}
+inline bool TVPFontGetGlyphOutline(tTVPFontFaceHandle face , tjs_uint32 glyphId , bool bold , bool italic , iTVPFontOutlineSink * sink)
+{
+	if(!TVPImportFuncPtr0ac0bd4880785e95101ba89358e520b6)
+	{
+		static char funcname[] = "bool ::TVPFontGetGlyphOutline(tTVPFontFaceHandle,tjs_uint32,bool,bool,iTVPFontOutlineSink *)";
+		TVPImportFuncPtr0ac0bd4880785e95101ba89358e520b6 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef bool (STDCALL * __functype)(tTVPFontFaceHandle , tjs_uint32 , bool , bool , iTVPFontOutlineSink *);
+	return ((__functype)(TVPImportFuncPtr0ac0bd4880785e95101ba89358e520b6))(face, glyphId, bold, italic, sink);
+}
+inline bool TVPFontGetGlyphBitmap(tTVPFontFaceHandle face , tjs_uint32 glyphId , tjs_int pixelSize , bool color , bool bold , bool italic , tTVPFontGlyphBitmap * out)
+{
+	if(!TVPImportFuncPtrb94f07b4177d8429b503019c1a62e97f)
+	{
+		static char funcname[] = "bool ::TVPFontGetGlyphBitmap(tTVPFontFaceHandle,tjs_uint32,tjs_int,bool,bool,bool,tTVPFontGlyphBitmap *)";
+		TVPImportFuncPtrb94f07b4177d8429b503019c1a62e97f = TVPGetImportFuncPtr(funcname);
+	}
+	typedef bool (STDCALL * __functype)(tTVPFontFaceHandle , tjs_uint32 , tjs_int , bool , bool , bool , tTVPFontGlyphBitmap *);
+	return ((__functype)(TVPImportFuncPtrb94f07b4177d8429b503019c1a62e97f))(face, glyphId, pixelSize, color, bold, italic, out);
+}
+inline bool TVPFontShapeLine(tTVPFontFaceChainHandle chain , const ttstr & text , tjs_int pixelSize , tjs_int baseDirection , iTVPFontShapeSink * sink)
+{
+	if(!TVPImportFuncPtr06b6412ffa8ad0f01f8e1fcad2532301)
+	{
+		static char funcname[] = "bool ::TVPFontShapeLine(tTVPFontFaceChainHandle,const ttstr &,tjs_int,tjs_int,iTVPFontShapeSink *)";
+		TVPImportFuncPtr06b6412ffa8ad0f01f8e1fcad2532301 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef bool (STDCALL * __functype)(tTVPFontFaceChainHandle , const ttstr &, tjs_int , tjs_int , iTVPFontShapeSink *);
+	return ((__functype)(TVPImportFuncPtr06b6412ffa8ad0f01f8e1fcad2532301))(chain, text, pixelSize, baseDirection, sink);
+}
+inline tjs_int TVPFontQueryFaces(const tTVPFontQueryParams & params , iTVPFontQuerySink * sink)
+{
+	if(!TVPImportFuncPtrc984bdefc1190df4eea9813e2f110990)
+	{
+		static char funcname[] = "tjs_int ::TVPFontQueryFaces(const tTVPFontQueryParams &,iTVPFontQuerySink *)";
+		TVPImportFuncPtrc984bdefc1190df4eea9813e2f110990 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef tjs_int (STDCALL * __functype)(const tTVPFontQueryParams &, iTVPFontQuerySink *);
+	return ((__functype)(TVPImportFuncPtrc984bdefc1190df4eea9813e2f110990))(params, sink);
+}
+inline bool TVPFontGetFaceInfo(const ttstr & nameOrPath , tTVPFontFaceInfo * out)
+{
+	if(!TVPImportFuncPtrc9292a7a5f30ecde00e8fc501aaa97b1)
+	{
+		static char funcname[] = "bool ::TVPFontGetFaceInfo(const ttstr &,tTVPFontFaceInfo *)";
+		TVPImportFuncPtrc9292a7a5f30ecde00e8fc501aaa97b1 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef bool (STDCALL * __functype)(const ttstr &, tTVPFontFaceInfo *);
+	return ((__functype)(TVPImportFuncPtrc9292a7a5f30ecde00e8fc501aaa97b1))(nameOrPath, out);
+}
 inline tjs_uint32 TVPToActualColor(tjs_uint32 col)
 {
 	if(!TVPImportFuncPtr29af78765c764c566e6adc77e0ea7041)
@@ -9137,6 +9490,7 @@ inline IDirect3D9 * TVPGetDirect3DObjectNoAddRef()
 	return ((__functype)(TVPImportFuncPtr5fd8dfd2816a2cfd4a51cab41053d575))();
 }
 #endif
+#ifdef KRKRZ_HAS_ELEMENTS
 inline void TVPRegisterDialogHost(iTVPDrawDevice * device , iTVPDialogRendererHost * host)
 {
 	if(!TVPImportFuncPtrf9ae2164a9808838ae76d5abbd4da3ee)
@@ -9147,6 +9501,8 @@ inline void TVPRegisterDialogHost(iTVPDrawDevice * device , iTVPDialogRendererHo
 	typedef void (STDCALL * __functype)(iTVPDrawDevice *, iTVPDialogRendererHost *);
 	((__functype)(TVPImportFuncPtrf9ae2164a9808838ae76d5abbd4da3ee))(device, host);
 }
+#endif
+#ifdef KRKRZ_HAS_ELEMENTS
 inline void TVPUnregisterDialogHost(iTVPDrawDevice * device)
 {
 	if(!TVPImportFuncPtrb102018b90a9c8a06052b9d3acf78edc)
@@ -9157,6 +9513,7 @@ inline void TVPUnregisterDialogHost(iTVPDrawDevice * device)
 	typedef void (STDCALL * __functype)(iTVPDrawDevice *);
 	((__functype)(TVPImportFuncPtrb102018b90a9c8a06052b9d3acf78edc))(device);
 }
+#endif
 inline iTVPScanLineProvider * TVPSLPLoadImage(const ttstr & name , tjs_int bpp , tjs_uint32 key , tjs_uint w , tjs_uint h)
 {
 	if(!TVPImportFuncPtr9982ebedc12d343cb098e2a7b25bdef1)
