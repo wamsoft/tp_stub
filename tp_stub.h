@@ -2151,6 +2151,7 @@ extern void * TVPImportFuncPtrb94f07b4177d8429b503019c1a62e97f;
 extern void * TVPImportFuncPtr06b6412ffa8ad0f01f8e1fcad2532301;
 extern void * TVPImportFuncPtrc984bdefc1190df4eea9813e2f110990;
 extern void * TVPImportFuncPtrc9292a7a5f30ecde00e8fc501aaa97b1;
+extern void * TVPImportFuncPtr6d8742bb5a371a62cdccde25fba9090a;
 extern void * TVPImportFuncPtr29af78765c764c566e6adc77e0ea7041;
 extern void * TVPImportFuncPtr9e0df54e4c24ee28d5517c1743faa3a3;
 extern void * TVPImportFuncPtrd3aaa55d66777d7308ffa7a348c84841;
@@ -9377,6 +9378,16 @@ inline bool TVPFontGetFaceInfo(const ttstr & nameOrPath , tTVPFontFaceInfo * out
 	}
 	typedef bool (STDCALL * __functype)(const ttstr &, tTVPFontFaceInfo *);
 	return ((__functype)(TVPImportFuncPtrc9292a7a5f30ecde00e8fc501aaa97b1))(nameOrPath, out);
+}
+inline const void * TVPGetFontTvgBridge()
+{
+	if(!TVPImportFuncPtr6d8742bb5a371a62cdccde25fba9090a)
+	{
+		static char funcname[] = "const void * ::TVPGetFontTvgBridge()";
+		TVPImportFuncPtr6d8742bb5a371a62cdccde25fba9090a = TVPGetImportFuncPtr(funcname);
+	}
+	typedef const void * (STDCALL * __functype)();
+	return ((__functype)(TVPImportFuncPtr6d8742bb5a371a62cdccde25fba9090a))();
 }
 inline tjs_uint32 TVPToActualColor(tjs_uint32 col)
 {
