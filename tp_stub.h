@@ -2090,6 +2090,10 @@ extern void * TVPImportFuncPtrfb3b405f8747b54f26c332b9e6af81cd;
 extern void * TVPImportFuncPtrb7ccd11d130f186883c109d2ba17b598;
 extern void * TVPImportFuncPtrcf8ab6c24f25993ccc7663e572ac2991;
 extern void * TVPImportFuncPtrd9128f12d3d74ab9d17926fb5b3dcc48;
+extern void * TVPImportFuncPtr19183eb9dba09e06e604c0328dd10463;
+extern void * TVPImportFuncPtr2e73ed3cdc5029eaf52094e73f9c5e59;
+extern void * TVPImportFuncPtr415231154f27f32361d5f6357153f0ab;
+extern void * TVPImportFuncPtre7f8ddffe13a3d03a36c0bfa3ddbc06c;
 extern void * TVPImportFuncPtrba40ffbca76695b54a02aa8c1f1e047b;
 extern void * TVPImportFuncPtr59b6101c4aef3dd58c5f4e7d66289f88;
 extern void * TVPImportFuncPtrdc4fd55a66925c6989f121a4f2f7d79a;
@@ -4921,6 +4925,17 @@ typedef void (TJS_USERENTRY *tTVPFinallyBlockFunction)(void *data);
 
 
 
+
+
+//---------------------------------------------------------------------------
+// ライセンス列挙の受け取りインターフェース (プラグイン向け)
+//---------------------------------------------------------------------------
+class iTVPLicenseListSink
+{
+public:
+	virtual void TJS_INTF_METHOD Found(const ttstr & name, const ttstr & group,
+		const ttstr & source) = 0;
+};
 
 
 
@@ -8758,6 +8773,46 @@ inline int TVPGetCommandLineInt(const tjs_char * name , int defaultValue)
 	}
 	typedef int (STDCALL * __functype)(const tjs_char *, int);
 	return ((__functype)(TVPImportFuncPtrd9128f12d3d74ab9d17926fb5b3dcc48))(name, defaultValue);
+}
+inline void TVPRegisterLicense(const ttstr & name , const ttstr & group , const tjs_uint8 * deflated , tjs_uint deflatedSize , tjs_uint originalSize)
+{
+	if(!TVPImportFuncPtr19183eb9dba09e06e604c0328dd10463)
+	{
+		static char funcname[] = "void ::TVPRegisterLicense(const ttstr &,const ttstr &,const tjs_uint8 *,tjs_uint,tjs_uint)";
+		TVPImportFuncPtr19183eb9dba09e06e604c0328dd10463 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef void (STDCALL * __functype)(const ttstr &, const ttstr &, const tjs_uint8 *, tjs_uint , tjs_uint);
+	((__functype)(TVPImportFuncPtr19183eb9dba09e06e604c0328dd10463))(name, group, deflated, deflatedSize, originalSize);
+}
+inline void TVPRegisterLicenseText(const ttstr & name , const ttstr & group , const ttstr & text)
+{
+	if(!TVPImportFuncPtr2e73ed3cdc5029eaf52094e73f9c5e59)
+	{
+		static char funcname[] = "void ::TVPRegisterLicenseText(const ttstr &,const ttstr &,const ttstr &)";
+		TVPImportFuncPtr2e73ed3cdc5029eaf52094e73f9c5e59 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef void (STDCALL * __functype)(const ttstr &, const ttstr &, const ttstr &);
+	((__functype)(TVPImportFuncPtr2e73ed3cdc5029eaf52094e73f9c5e59))(name, group, text);
+}
+inline bool TVPGetLicenseText(const ttstr & name , ttstr & text)
+{
+	if(!TVPImportFuncPtr415231154f27f32361d5f6357153f0ab)
+	{
+		static char funcname[] = "bool ::TVPGetLicenseText(const ttstr &,ttstr &)";
+		TVPImportFuncPtr415231154f27f32361d5f6357153f0ab = TVPGetImportFuncPtr(funcname);
+	}
+	typedef bool (STDCALL * __functype)(const ttstr &, ttstr &);
+	return ((__functype)(TVPImportFuncPtr415231154f27f32361d5f6357153f0ab))(name, text);
+}
+inline tjs_int TVPEnumLicenses(iTVPLicenseListSink * sink)
+{
+	if(!TVPImportFuncPtre7f8ddffe13a3d03a36c0bfa3ddbc06c)
+	{
+		static char funcname[] = "tjs_int ::TVPEnumLicenses(iTVPLicenseListSink *)";
+		TVPImportFuncPtre7f8ddffe13a3d03a36c0bfa3ddbc06c = TVPGetImportFuncPtr(funcname);
+	}
+	typedef tjs_int (STDCALL * __functype)(iTVPLicenseListSink *);
+	return ((__functype)(TVPImportFuncPtre7f8ddffe13a3d03a36c0bfa3ddbc06c))(sink);
 }
 #ifdef __WINVER__
 inline tjs_uint32 TVPGetCPUType()
