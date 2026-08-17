@@ -6544,9 +6544,13 @@ public:
 	//! @note		このメソッドは、VSync待ちを有効にするかどうかを設定する。
 	//!				有効にすると、描画デバイスは低層側の機能で VSYnc を待つ
 	virtual void SetWaitVSync(bool enable) = 0;
+#endif
 
 	//---------------------------------------------------------------------------
 	// ビューポート余白塗り (ゲーム画面が surface 全面を覆わないときの周囲)
+	//
+	//   全バリアント共通。 vtable の末尾に置くこと (WINVER で後から追加したため、
+	//   ここより前に仮想関数を挟むとプラグイン側の vtable と食い違う)。
 	//---------------------------------------------------------------------------
 
 	//! @brief		(Window->DrawDevice) 余白の背景色を設定する
@@ -6569,7 +6573,6 @@ public:
 
 	//! @brief		(Window->DrawDevice) 余白の壁紙をクリアする
 	virtual void ClearViewportWallpaper() {}
-#endif
 
 };
 //---------------------------------------------------------------------------
@@ -6686,6 +6689,18 @@ public:
 	// overlay インスタンスが閉じられたとき、 その layer のテクスチャ /
 	// ステージングを破棄する。 未知の layer は no-op。
 	virtual void ReleaseLayer(const void* layer) = 0;
+
+	// ReleaseBuffer の部分転送版: staging のうち (x, y, w, h) だけをテクスチャへ
+	// アップロードする (部分再描画時の転送コスト削減)。 staging とテクスチャの
+	// 残部には前回フレームの内容が維持されている前提 (AcquireBuffer が同一
+	// layer・同一サイズで staging を再利用すること)。 既定実装は全面
+	// ReleaseBuffer へのフォールバック (未対応レンダラでも正しさは保たれる)。
+	// ※ 既存レンダラ実装の ABI 互換のため vtable 末尾に追加している。
+	virtual void ReleaseBufferRect(const void* layer, int x, int y, int w, int h)
+	{
+		(void)x; (void)y; (void)w; (void)h;
+		ReleaseBuffer(layer);
+	}
 };
 
 //---------------------------------------------------------------------------
