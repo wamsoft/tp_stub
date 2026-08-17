@@ -6141,6 +6141,34 @@ enum tTVPViewportFit {
 
 
 //---------------------------------------------------------------------------
+//! @brief	ビューポート余白 (背景色 + 壁紙) の設定を受け取る登録口
+//---------------------------------------------------------------------------
+class iTVPViewportBackgroundHost
+{
+public:
+	//! @brief		余白の背景色を設定する
+	//! @param		color	0xAARRGGBB
+	virtual void SetViewportBackgroundColor(tjs_uint32 color) = 0;
+
+	//! @brief		余白の壁紙を設定する
+	//! @param		image	壁紙となる Layer / Bitmap オブジェクトを保持する Variant。
+	//!						void / null でクリア。tTJSVariant が参照を保持するので
+	//!						イメージデータは維持される。描画デバイス (プラグイン可) は
+	//!						imageWidth/imageHeight/mainImageBuffer/mainImageBufferPitch
+	//!						プロパティから画像イメージを取得する (内部型は渡さない)。
+	//! @param		fit		壁紙のフィット方式
+	//! @param		alignX	水平配置 0..1
+	//! @param		alignY	垂直配置 0..1
+	virtual void SetViewportWallpaper(const tTJSVariant &image,
+		tTVPViewportFit fit, double alignX, double alignY) = 0;
+
+	//! @brief		余白の壁紙をクリアする
+	virtual void ClearViewportWallpaper() = 0;
+};
+//---------------------------------------------------------------------------
+
+
+//---------------------------------------------------------------------------
 //! @brief		描画デバイスインターフェース
 //---------------------------------------------------------------------------
 class iTVPDrawDevice
@@ -6546,33 +6574,12 @@ public:
 	virtual void SetWaitVSync(bool enable) = 0;
 #endif
 
-	//---------------------------------------------------------------------------
-	// ビューポート余白塗り (ゲーム画面が surface 全面を覆わないときの周囲)
-	//
-	//   全バリアント共通。 vtable の末尾に置くこと (WINVER で後から追加したため、
-	//   ここより前に仮想関数を挟むとプラグイン側の vtable と食い違う)。
-	//---------------------------------------------------------------------------
-
-	//! @brief		(Window->DrawDevice) 余白の背景色を設定する
-	//! @param		color	0xAARRGGBB
-	//! @note		既定は no-op。tTVPDrawDevice が保持・描画する。
-	//!				iTVPDrawDevice 直接実装 (NullDrawDevice 等) は何もしない。
-	virtual void SetViewportBackgroundColor(tjs_uint32 color) {}
-
-	//! @brief		(Window->DrawDevice) 余白の壁紙を設定する
-	//! @param		image	壁紙となる Layer / Bitmap オブジェクトを保持する Variant。
-	//!						void / null でクリア。tTJSVariant が参照を保持するので
-	//!						イメージデータは維持される。描画デバイス (プラグイン可) は
-	//!						imageWidth/imageHeight/mainImageBuffer/mainImageBufferPitch
-	//!						プロパティから画像イメージを取得する (内部型は渡さない)。
-	//! @param		fit		壁紙のフィット方式
-	//! @param		alignX	水平配置 0..1
-	//! @param		alignY	垂直配置 0..1
-	virtual void SetViewportWallpaper(const tTJSVariant &image,
-		tTVPViewportFit fit, double alignX, double alignY) {}
-
-	//! @brief		(Window->DrawDevice) 余白の壁紙をクリアする
-	virtual void ClearViewportWallpaper() {}
+	// ビューポート余白塗り (背景色 + 壁紙) は iTVPDrawDevice には載せない。
+	// vtable を増やすと既存プラグイン製の描画デバイスと食い違うため、
+	// 対応デバイスだけが iTVPViewportBackgroundHost を実装し、TJS プロパティ
+	// "viewportBackgroundHost" でポインタを公開する規約にしている
+	// (videoPresenterHost / dialogRendererHost と同じ方式)。
+	// 詳細 = common/visual/ViewportBackground.h
 
 };
 //---------------------------------------------------------------------------
