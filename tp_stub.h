@@ -2155,6 +2155,7 @@ extern void * TVPImportFuncPtr36f3e06e3c9e017af6c4e202c266bccc;
 extern void * TVPImportFuncPtr64ddce47dd94e7f793f211a834fbbca1;
 extern void * TVPImportFuncPtr0ac0bd4880785e95101ba89358e520b6;
 extern void * TVPImportFuncPtrb94f07b4177d8429b503019c1a62e97f;
+extern void * TVPImportFuncPtr2a79397be4f35710cdc6a845b83fc66b;
 extern void * TVPImportFuncPtr6b055f35e55c446d62dd21152f313b81;
 extern void * TVPImportFuncPtrb49fa57f9611b886597ba76020e5d00a;
 extern void * TVPImportFuncPtr9cf977ed402cf2540ccdfdd334cf97d8;
@@ -5219,6 +5220,45 @@ struct tTVPFontVarCoord
 {
 	tjs_uint32 Tag;
 	float Value;
+};
+
+// グリフのラスタライズ指定 (TVPFontRenderGlyphMask)
+//
+// アウトラインをピクセルにする処理は品質 (AA / ストローク / グリッドフィット)
+// を外すと目立つので本体側で持つ。消費者は返った 8bit カバレッジを好きな色で
+// 合成するだけでよく、本体 drawText と見た目が揃う。
+#define TVP_FONT_JOIN_MITER		0
+#define TVP_FONT_JOIN_ROUND		1
+#define TVP_FONT_JOIN_BEVEL		2
+#define TVP_FONT_CAP_BUTT		0
+#define TVP_FONT_CAP_ROUND		1
+#define TVP_FONT_CAP_SQUARE		2
+
+struct tTVPFontRenderParams
+{
+	// 行優先 2x3: {xx, xy, dx, yx, yy, dy}
+	// **フォントユニット (y-up) → ピクセル (y-up)** のアフィン。サイズ・斜体
+	// シアー・幅スケール・サブピクセル位置をここに畳み込む (アウトラインに
+	// 焼き込んでからラスタライズするので後段でのスケール劣化が無い)
+	float Transform[6];
+	bool Bold;                  // 合成ボールド
+	bool Italic;                // 合成イタリック
+	float StrokeWidth;          // 0 = 塗り、>0 = 縁取り (内部は塗らない)
+	tjs_int Join;               // TVP_FONT_JOIN_*
+	tjs_int Cap;                // TVP_FONT_CAP_*
+	float MiterLimit;
+};
+
+// 8bit カバレッジマスク。Left/Top はペン原点からのオフセット (ピクセル、
+// **y 上向き正**)。Buffer は同一 face への次のラスタライズ呼び出しまで有効
+struct tTVPFontGlyphMask
+{
+	tjs_int Left;
+	tjs_int Top;
+	tjs_int Width;
+	tjs_int Height;
+	tjs_int Pitch;
+	const tjs_uint8 * Buffer;
 };
 
 // カラーグリフ (COLR v0/v1) のレイヤー
@@ -9529,6 +9569,16 @@ inline bool TVPFontGetGlyphBitmap(tTVPFontFaceHandle face , tjs_uint32 glyphId ,
 	}
 	typedef bool (STDCALL * __functype)(tTVPFontFaceHandle , tjs_uint32 , tjs_int , bool , bool , bool , tTVPFontGlyphBitmap *);
 	return ((__functype)(TVPImportFuncPtrb94f07b4177d8429b503019c1a62e97f))(face, glyphId, pixelSize, color, bold, italic, out);
+}
+inline bool TVPFontRenderGlyphMask(tTVPFontFaceHandle face , tjs_uint32 glyphId , const tTVPFontRenderParams * params , tTVPFontGlyphMask * out)
+{
+	if(!TVPImportFuncPtr2a79397be4f35710cdc6a845b83fc66b)
+	{
+		static char funcname[] = "bool ::TVPFontRenderGlyphMask(tTVPFontFaceHandle,tjs_uint32,const tTVPFontRenderParams *,tTVPFontGlyphMask *)";
+		TVPImportFuncPtr2a79397be4f35710cdc6a845b83fc66b = TVPGetImportFuncPtr(funcname);
+	}
+	typedef bool (STDCALL * __functype)(tTVPFontFaceHandle , tjs_uint32 , const tTVPFontRenderParams *, tTVPFontGlyphMask *);
+	return ((__functype)(TVPImportFuncPtr2a79397be4f35710cdc6a845b83fc66b))(face, glyphId, params, out);
 }
 inline tjs_int TVPFontGetColorLayers(tTVPFontFaceHandle face , tjs_uint32 glyphId , tjs_int pixelSize , iTVPFontColorLayerSink * sink , float * clipBox)
 {
