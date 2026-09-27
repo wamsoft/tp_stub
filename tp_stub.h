@@ -2070,6 +2070,9 @@ extern void * TVPImportFuncPtr347a4fa85af84e223c4b61d33ead694a;
 extern void * TVPImportFuncPtr4ad1dd24b3b4769ee10149eea006af7a;
 extern void * TVPImportFuncPtrb246b17b62d273bdc04e9d9e827f5c74;
 extern void * TVPImportFuncPtr4ccd3f6ab60d61be6dbfc59e8e3d1726;
+extern void * TVPImportFuncPtrcf7118dbd7e878ac059cc2c8c6660c4c;
+extern void * TVPImportFuncPtrc15c08961dd99d25d12723440da84264;
+extern void * TVPImportFuncPtrf01495ff840690213058f9708d6b5dba;
 extern void * TVPImportFuncPtrc23ece207f6ec2dd7c76ef873047aee3;
 extern void * TVPImportFuncPtr81507020bc646be2f53ab95b9430ba27;
 extern void * TVPImportFuncPtracc0d3861d1b971abcbdda1c075dd681;
@@ -4998,7 +5001,8 @@ typedef void * TVP_THREAD_PARAM;
 //---------------------------------------------------------------------------
 enum tTVPClipboardFormat
 {
-	cbfText = 1
+	cbfText = 1,
+	cbfBitmap = 2
 };
 
 
@@ -8723,6 +8727,36 @@ inline HWND TVPGetApplicationWindowHandle()
 	return ((__functype)(TVPImportFuncPtr4ccd3f6ab60d61be6dbfc59e8e3d1726))();
 }
 #endif
+inline void TVPRegisterBundledPlugin(const ttstr & name)
+{
+	if(!TVPImportFuncPtrcf7118dbd7e878ac059cc2c8c6660c4c)
+	{
+		static char funcname[] = "void ::TVPRegisterBundledPlugin(const ttstr &)";
+		TVPImportFuncPtrcf7118dbd7e878ac059cc2c8c6660c4c = TVPGetImportFuncPtr(funcname);
+	}
+	typedef void (STDCALL * __functype)(const ttstr &);
+	((__functype)(TVPImportFuncPtrcf7118dbd7e878ac059cc2c8c6660c4c))(name);
+}
+inline void TVPUnregisterBundledPlugin(const ttstr & name)
+{
+	if(!TVPImportFuncPtrc15c08961dd99d25d12723440da84264)
+	{
+		static char funcname[] = "void ::TVPUnregisterBundledPlugin(const ttstr &)";
+		TVPImportFuncPtrc15c08961dd99d25d12723440da84264 = TVPGetImportFuncPtr(funcname);
+	}
+	typedef void (STDCALL * __functype)(const ttstr &);
+	((__functype)(TVPImportFuncPtrc15c08961dd99d25d12723440da84264))(name);
+}
+inline bool TVPIsBundledPlugin(const ttstr & name)
+{
+	if(!TVPImportFuncPtrf01495ff840690213058f9708d6b5dba)
+	{
+		static char funcname[] = "bool ::TVPIsBundledPlugin(const ttstr &)";
+		TVPImportFuncPtrf01495ff840690213058f9708d6b5dba = TVPGetImportFuncPtr(funcname);
+	}
+	typedef bool (STDCALL * __functype)(const ttstr &);
+	return ((__functype)(TVPImportFuncPtrf01495ff840690213058f9708d6b5dba))(name);
+}
 inline void TVPThrowPluginUnboundFunctionError(const char * funcname)
 {
 	if(!TVPImportFuncPtrc23ece207f6ec2dd7c76ef873047aee3)
