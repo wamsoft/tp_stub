@@ -57,6 +57,9 @@ function(krkrz_plugin PROJECT_NAME)
             INTERFACE_LINK_OPTIONS
             $<$<CXX_COMPILER_ID:MSVC>:/WHOLEARCHIVE:$<TARGET_FILE:${PROJECT_NAME}>>
             $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-Wl,--whole-archive,$<TARGET_FILE:${PROJECT_NAME}>,--no-whole-archive>
+            # Apple の ld64 は --whole-archive を持たない。 NCB_REGISTER_* だけを持つ
+            # オブジェクトが捨てられないよう -force_load で全メンバを取り込む
+            $<$<CXX_COMPILER_ID:AppleClang>:-Wl,-force_load,$<TARGET_FILE:${PROJECT_NAME}>>
         )
     endif()
 
