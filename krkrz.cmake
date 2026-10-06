@@ -63,6 +63,15 @@ function(krkrz_plugin PROJECT_NAME)
         )
     endif()
 
+    # Linux: プラグインが同梱 .so に依存するとき、plugin/ フォルダ ($ORIGIN) と
+    # exe のフォルダ ($ORIGIN/..) から確実に読ませる。DT_RPATH にするのは、Steam
+    # 起動時は LD_LIBRARY_PATH の先頭に /usr/lib 等が入り RUNPATH では負けるため。
+    # また RUNPATH を持つと exe 側の DT_RPATH ($ORIGIN) も使われなくなる。
+    if (TVP_LIBRARY_TYPE STREQUAL "SHARED" AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "\$ORIGIN;\$ORIGIN/..")
+        target_link_options(${PROJECT_NAME} PRIVATE "LINKER:--disable-new-dtags")
+    endif()
+
     if (KRKRZ_DEFINITIONS)
         target_compile_definitions(${PROJECT_NAME} PRIVATE ${KRKRZ_DEFINITIONS})
     endif()
