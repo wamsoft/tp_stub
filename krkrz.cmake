@@ -88,6 +88,30 @@ function(krkrz_plugin PROJECT_NAME)
         )
     endif()
 
+    # 共有プラグイン (Linux / macOS): 公開するのは V2Link / V2Unlink だけにする。
+    # 上の hidden はプラグイン自身のコードにしか効かず、 静的リンクしたライブラリ
+    # (libstdc++ / zlib / expat / threepp / Effekseer など) のシンボルは既定の公開の
+    # まま残っていた (多いもので 2 万個超)。 同じライブラリを別々に静的リンクした
+    # プラグインを 2 本読むと、 上の ncbind と同じ形で互いの実装が混ざりうる。
+    # Linux はバージョンスクリプトで、 macOS (ld64) は -exported_symbol で絞る。
+    if (TVP_LIBRARY_TYPE STREQUAL "SHARED" AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        set(_krkrz_export_map "${CMAKE_BINARY_DIR}/krkrz_plugin_exports.map")
+        if (NOT EXISTS "${_krkrz_export_map}")
+            file(WRITE "${_krkrz_export_map}" "{
+  global: V2Link; V2Unlink;
+  local: *;
+};
+")
+        endif()
+        target_link_options(${PROJECT_NAME} PRIVATE "LINKER:--version-script=${_krkrz_export_map}")
+        set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY LINK_DEPENDS "${_krkrz_export_map}")
+    elseif (TVP_LIBRARY_TYPE STREQUAL "SHARED" AND APPLE)
+        target_link_options(${PROJECT_NAME} PRIVATE
+            "LINKER:-exported_symbol,_V2Link"
+            "LINKER:-exported_symbol,_V2Unlink"
+        )
+    endif()
+
     if (KRKRZ_DEFINITIONS)
         target_compile_definitions(${PROJECT_NAME} PRIVATE ${KRKRZ_DEFINITIONS})
     endif()
