@@ -88,6 +88,16 @@ function(krkrz_plugin PROJECT_NAME)
         )
     endif()
 
+    # Linux (gcc): 例外の巻き戻し処理を共有の libgcc_s.so.1 に一本化する (本体と同じ指定。
+    # 本体の src/core/CMakeLists.txt の説明を参照)。 exe とプラグインが libgcc を静的に
+    # 抱えていると、 プラグインのフレームを越える例外で unwinder の複製が混ざって abort する。
+    # -shared-libgcc は効かない gcc がある (libgcc を常に静的に使う specs) ので libgcc_s.so.1 を直接リンクする。
+    if (TVP_LIBRARY_TYPE STREQUAL "SHARED" AND CMAKE_SYSTEM_NAME STREQUAL "Linux"
+        AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_link_options(${PROJECT_NAME} PRIVATE
+            "SHELL:-Wl,--push-state,--no-as-needed -l:libgcc_s.so.1 -Wl,--pop-state")
+    endif()
+
     # 共有プラグイン (Linux / macOS): 公開するのは V2Link / V2Unlink だけにする。
     # 上の hidden はプラグイン自身のコードにしか効かず、 静的リンクしたライブラリ
     # (libstdc++ / zlib / expat / threepp / Effekseer など) のシンボルは既定の公開の
